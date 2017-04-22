@@ -2,6 +2,7 @@
 #define CONTROLLER_HH
 
 #include <cstdint>
+#include <deque>
 
 /* Congestion controller interface */
 
@@ -12,6 +13,15 @@ private:
 
   /* Add member variables here */
 
+  struct sent_packet_info_ {
+    uint64_t seqno;
+    uint64_t sent_time;
+
+    sent_packet_info_(uint64_t seqno_, uint64_t sent_time_)
+      : seqno(seqno_), sent_time(sent_time_) { }
+  };
+
+  std::deque<sent_packet_info_> packets_sent_;
   double the_window_size_;
 
 public:
@@ -30,7 +40,7 @@ public:
 			  const uint64_t send_timestamp );
 
   /* A timeout occurred. */
-  void timeout_occurred( void );
+  void adjust_window( void );
 
   /* An ack was received */
   void ack_received( const uint64_t sequence_number_acked,

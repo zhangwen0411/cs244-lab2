@@ -1,4 +1,5 @@
 #include <iostream>
+#include <deque>
 
 #include "controller.hh"
 #include "timestamp.hh"
@@ -7,7 +8,7 @@ using namespace std;
 
 /* Default constructor */
 Controller::Controller( const bool debug )
-  : debug_( debug ), the_window_size_(15)
+  : debug_( debug ), packets_sent_(), the_window_size_(10)
 {}
 
 /* Get current window size, in datagrams */
@@ -27,6 +28,7 @@ void Controller::datagram_was_sent( const uint64_t sequence_number,
 				    const uint64_t send_timestamp
             /* in milliseconds */)
 {
+  packets_sent_.push_back(sent_packet_info_(sequence_number, send_timestamp));
   if ( debug_ ) {
     cerr << "At time " << send_timestamp
 	 << " sent datagram " << sequence_number << endl;
@@ -42,8 +44,18 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
 			       /* when the acknowledged datagram was received (receiver's clock)*/
 			       const uint64_t timestamp_ack_received )
                                /* when the ack was received (by sender) */
-{ 
-  the_window_size_ += 1.0 / the_window_size_;
+{
+  bool timeout = true;
+  while (!packets_sent_.empty() &&
+         packets_sent_.front().seqno <= sequence_number_acked) {
+    timeout = false;
+    packets_sent_.pop_front();
+  }
+
+  if (!timeout) {
+    the_window_size_ += 1.0 / the_window_size_;
+    if ( debug_ ) cerr << "Ack; window size = " << the_window_size_ << endl;
+  }
 
   if ( debug_ ) {
     cerr << "At time " << timestamp_ack_received
@@ -52,14 +64,30 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
 	 << ", received @ time " << recv_timestamp_acked << " by receiver's clock)"
 	 << endl;
   }
+
+  /*
+  cerr << "RTT = " << timestamp_ack_received - send_timestamp_acked
+       << ", window size = " << the_window_size_ << endl;
+       */
 }
 
-void Controller::timeout_occurred( void ) {
+void Controller::adjust_window( void )
+{
+  bool timeout = false;
+  uint64_t now = timestamp_ms();
+  while (!packets_sent_.empty() &&
+         packets_sent_.front().sent_time < now - timeout_ms()) {
+    timeout = true;
+    packets_sent_.pop_front();
+  }
   /*
   cerr << "Timeout at time " << timestamp_ms()
        << " window size is " << the_window_size_ << endl;
        */
-  the_window_size_ = max(1.0, the_window_size_ / 2.0);
+  if (timeout) {
+    the_window_size_ = max(1.0, the_window_size_ / 2.0);
+    if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
+  }
 }
 
 /* How long to wait (in milliseconds) if there are no acks

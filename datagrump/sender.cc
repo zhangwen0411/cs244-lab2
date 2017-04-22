@@ -146,10 +146,14 @@ int DatagrumpSender::loop( void )
     const auto ret = poller.poll( controller_.timeout_ms() );
     if ( ret.result == PollResult::Exit ) {
       return ret.exit_status;
-    } else if ( ret.result == PollResult::Timeout ) {
-      /* After a timeout, send one datagram to try to get things moving again */
-      // send_datagram();
-      controller_.timeout_occurred();
     }
+
+    controller_.adjust_window();
+#if 0
+    else if ( ret.result == PollResult::Timeout ) {
+      /* After a timeout, send one datagram to try to get things moving again */
+      send_datagram();
+    }
+#endif
   }
 }
