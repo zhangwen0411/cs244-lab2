@@ -21,11 +21,12 @@ public:
   Controller( const bool debug );
 
   /* Get current window size, in datagrams */
-  unsigned int window_size( void );
+  double window_size( void );
 
   /* A datagram was sent */
   void datagram_was_sent( const uint64_t sequence_number,
-			  const uint64_t send_timestamp );
+			  const uint64_t send_timestamp,
+			  bool after_timeout );
 
   /* An ack was received */
   void ack_received( const uint64_t sequence_number_acked,
