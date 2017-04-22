@@ -2,7 +2,7 @@
 #define CONTROLLER_HH
 
 #include <cstdint>
-#include <deque>
+#include <queue>
 
 /* Congestion controller interface */
 
@@ -21,7 +21,7 @@ private:
       : seqno(seqno_), sent_time(sent_time_) { }
   };
 
-  std::deque<sent_packet_info_> packets_sent_;
+  std::queue<sent_packet_info_> packets_sent_;
   double the_window_size_;
 
 public:

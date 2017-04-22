@@ -1,5 +1,5 @@
 #include <iostream>
-#include <deque>
+#include <queue>
 
 #include "controller.hh"
 #include "timestamp.hh"
@@ -9,7 +9,7 @@ using namespace std;
 /* Default constructor */
 Controller::Controller( const bool debug )
   : debug_( debug ), packets_sent_(), the_window_size_(10)
-{}
+{ }
 
 /* Get current window size, in datagrams */
 double Controller::window_size( void )
@@ -28,7 +28,7 @@ void Controller::datagram_was_sent( const uint64_t sequence_number,
 				    const uint64_t send_timestamp
             /* in milliseconds */)
 {
-  packets_sent_.push_back(sent_packet_info_(sequence_number, send_timestamp));
+  packets_sent_.push(sent_packet_info_(sequence_number, send_timestamp));
   if ( debug_ ) {
     cerr << "At time " << send_timestamp
 	 << " sent datagram " << sequence_number << endl;
@@ -49,7 +49,7 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
   while (!packets_sent_.empty() &&
          packets_sent_.front().seqno <= sequence_number_acked) {
     timeout = false;
-    packets_sent_.pop_front();
+    packets_sent_.pop();
   }
 
   if (!timeout) {
@@ -78,7 +78,7 @@ void Controller::adjust_window( void )
   while (!packets_sent_.empty() &&
          packets_sent_.front().sent_time < now - timeout_ms()) {
     timeout = true;
-    packets_sent_.pop_front();
+    packets_sent_.pop();
   }
   /*
   cerr << "Timeout at time " << timestamp_ms()
