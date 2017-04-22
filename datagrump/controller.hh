@@ -12,6 +12,8 @@ private:
 
   /* Add member variables here */
 
+  double the_window_size_;
+
 public:
   /* Public interface for the congestion controller */
   /* You can change these if you prefer, but will need to change
@@ -25,8 +27,10 @@ public:
 
   /* A datagram was sent */
   void datagram_was_sent( const uint64_t sequence_number,
-			  const uint64_t send_timestamp,
-			  bool after_timeout );
+			  const uint64_t send_timestamp );
+
+  /* A timeout occurred. */
+  void timeout_occurred( void );
 
   /* An ack was received */
   void ack_received( const uint64_t sequence_number_acked,
