@@ -92,7 +92,7 @@ void DatagrumpSender::got_ack( const uint64_t timestamp,
   controller_.ack_received( ack.header.ack_sequence_number,
 			    ack.header.ack_send_timestamp,
 			    ack.header.ack_recv_timestamp,
-			    timestamp );
+			    timestamp, sequence_number_ );
 }
 
 void DatagrumpSender::send_datagram( void )
@@ -101,6 +101,7 @@ void DatagrumpSender::send_datagram( void )
   static const string dummy_payload( 1424, 'x' );
 
   ContestMessage cm( sequence_number_++, dummy_payload );
+  controller_.increment_sequence_number();
   cm.set_send_timestamp();
   socket_.send( cm.to_string() );
 
