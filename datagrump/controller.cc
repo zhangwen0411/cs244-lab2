@@ -9,15 +9,28 @@ using namespace std;
 
 /* Default constructor */
 Controller::Controller( const bool debug )
-  : debug_( debug ), bw_filter_(), rtt_filter_(), delivered_( 0 ), packets_(), sequence_number_(0)
+  : debug_( debug ), bw_filter_(), rtt_filter_(), delivered_( 0 ), packets_(),
+    sequence_number_(0), state_(NORMAL), probe_rtt_start_()
 {}
 
 /* Get current window size, in datagrams */
 unsigned int Controller::window_size( void )
 {
-  double bdp = 1.5 * get_rtt() * get_bw();
-  // cerr << "At time " << timestamp_ms() << " window size is " << bdp << endl;
-  return bdp;
+  tp now = std::chrono::system_clock::now();
+  if (state_ == PROBE_RTT && now - probe_rtt_start_ > std::chrono::milliseconds(200)) {
+    cerr << "Exiting ProbeRTT" << endl;
+    state_ = NORMAL;
+  }
+
+  auto rtt = get_rtt();
+
+  if (state_ == PROBE_RTT) {
+    return 4;
+  } else {
+    double bdp = 1.25 * rtt * get_bw();
+    // cerr << "At time " << timestamp_ms() << " window size is " << bdp << endl;
+    return bdp;
+  }
   /*
   unsigned int the_window_size = 50;
 
@@ -56,6 +69,11 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
              /* when the ack was received (by sender) */
              const uint64_t sequence_number )
 {
+  if (state_ == PROBE_RTT) {
+    cerr << "Exiting ProbeRTT" << endl;
+    state_ = NORMAL;
+  }
+
   delivered_++;
   delivered_ += sequence_number * 0;
 
@@ -87,7 +105,6 @@ double Controller::get_bw( void )
 
 void Controller::update_bw( const double new_bw, const uint64_t seqno )
 {
-  // Keep 10 packets.
   while (!bw_filter_.empty() && bw_filter_.front().seqno < seqno - 10) {
     bw_filter_.pop_front();
   }
@@ -111,11 +128,18 @@ uint64_t Controller::get_rtt( void )
     rtt_filter_.pop_front();
   }
 
+  if (state_ == NORMAL && rtt_filter_.empty()) {
+    cerr << "Entering ProbeRTT" << endl;
+    state_ = PROBE_RTT;
+    probe_rtt_start_ = now;
+  }
+
   return rtt_filter_.empty() ? 100 : rtt_filter_.front().rtt;
 }
 
 void Controller::update_rtt( const uint64_t new_rtt )
 {
+  tp now = std::chrono::system_clock::now();
   while (!rtt_filter_.empty() && rtt_filter_.back().rtt > new_rtt) {
     rtt_filter_.pop_back();
   }
@@ -125,6 +149,5 @@ void Controller::update_rtt( const uint64_t new_rtt )
        << ", deque size = " << rtt_filter_.size() << endl;
        */
 
-  tp now = std::chrono::system_clock::now();
   rtt_filter_.push_back(rtt_sample_( now, new_rtt ));
 }

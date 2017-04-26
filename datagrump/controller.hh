@@ -47,6 +47,13 @@ private:
 
   uint64_t sequence_number_;
 
+  enum {
+    NORMAL,
+    PROBE_RTT,
+  } state_;
+
+  tp probe_rtt_start_;
+
 public:
   /* Public interface for the congestion controller */
   /* You can change these if you prefer, but will need to change
