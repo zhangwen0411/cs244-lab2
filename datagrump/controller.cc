@@ -96,9 +96,9 @@ void Controller::adjust_window( void )
        << " window size is " << the_window_size_ << endl;
        */
   if (timeout) {
-    ssthresh = the_window_size_ / 1.5;
-    the_window_size_ = 5;
-    slow_start = true;
+    ssthresh = the_window_size_ / 1.15;
+    the_window_size_ = ssthresh;
+    slow_start = false;
     if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
   }
 }
