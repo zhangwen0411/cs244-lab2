@@ -11,6 +11,19 @@ private:
   bool debug_; /* Enables debugging output */
 
   /* Add member variables here */
+  double rate_;
+  uint64_t prev_rtt_;
+  double rtt_diff_;
+
+  uint64_t counter_;
+  uint64_t neg_gradient_counter_;
+
+  const uint64_t t_low = 50;
+  const uint64_t t_high = 200;
+
+  const double alpha = 0.8;
+  const double beta = 0.8;
+  const double delta = 1e-2;
 
 public:
   /* Public interface for the congestion controller */
