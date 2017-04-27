@@ -6,9 +6,12 @@
 
 using namespace std;
 
+
+
 /* Default constructor */
 Controller::Controller( const bool debug )
-  : debug_( debug ), packets_sent_(), the_window_size_(10)
+  : debug_( debug ), packets_sent_(), the_window_size_(5), 
+    slow_start(true), ssthresh(20)
 { }
 
 /* Get current window size, in datagrams */
@@ -53,7 +56,15 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
   }
 
   if (!timeout) {
-    the_window_size_ += 1.0 / the_window_size_;
+    if (slow_start) {
+      the_window_size_ += 1;
+    }
+    else {
+      the_window_size_ += 1.0 / the_window_size_;
+    }
+    if (the_window_size_ >= ssthresh) {
+      slow_start = false;
+    }
     if ( debug_ ) cerr << "Ack; window size = " << the_window_size_ << endl;
   }
 
@@ -85,7 +96,9 @@ void Controller::adjust_window( void )
        << " window size is " << the_window_size_ << endl;
        */
   if (timeout) {
-    the_window_size_ = max(1.0, the_window_size_ / 2.0);
+    the_window_size_ = 5;
+    slow_start = true;
+    ssthresh *= 2.0 / 3;
     if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
   }
 }

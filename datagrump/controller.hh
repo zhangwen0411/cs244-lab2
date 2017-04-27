@@ -23,6 +23,8 @@ private:
 
   std::queue<sent_packet_info_> packets_sent_;
   double the_window_size_;
+  bool slow_start;
+  double ssthresh;
 
 public:
   /* Public interface for the congestion controller */
