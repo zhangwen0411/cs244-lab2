@@ -27,7 +27,7 @@ unsigned int Controller::window_size( void )
   if (state_ == PROBE_RTT) {
     return 4;
   } else {
-    double bdp = 1.25 * rtt * get_bw();
+    double bdp = double(1.5) * rtt * get_bw();
     // cerr << "At time " << timestamp_ms() << " window size is " << bdp << endl;
     return bdp;
   }
