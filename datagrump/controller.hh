@@ -54,6 +54,8 @@ private:
 
   tp probe_rtt_start_;
 
+  uint64_t epoch_;
+
 public:
   /* Public interface for the congestion controller */
   /* You can change these if you prefer, but will need to change
@@ -81,6 +83,8 @@ public:
   unsigned int timeout_ms( void );
 
   void increment_sequence_number( void ) { sequence_number_++; }
+
+  void advance( void ) { epoch_++; }
 };
 
 #endif

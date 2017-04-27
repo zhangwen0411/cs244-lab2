@@ -127,6 +127,7 @@ int DatagrumpSender::loop( void )
 	while ( window_is_open() ) {
 	  send_datagram();
 	}
+  controller_.advance();
 	return ResultType::Continue;
       },
       /* We're only interested in this rule when the window is open */

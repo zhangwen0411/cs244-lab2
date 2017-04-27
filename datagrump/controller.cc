@@ -5,12 +5,15 @@
 #include "controller.hh"
 #include "timestamp.hh"
 
+const double gain_cycle[] = { 5.0/4, 3.0/4, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
+const int GC = sizeof(gain_cycle) / sizeof(gain_cycle[0]);
+
 using namespace std;
 
 /* Default constructor */
 Controller::Controller( const bool debug )
   : debug_( debug ), bw_filter_(), rtt_filter_(), delivered_( 0 ), packets_(),
-    sequence_number_(0), state_(NORMAL), probe_rtt_start_()
+    sequence_number_(0), state_(NORMAL), probe_rtt_start_(), epoch_( 0 )
 {}
 
 /* Get current window size, in datagrams */
@@ -27,8 +30,10 @@ unsigned int Controller::window_size( void )
   if (state_ == PROBE_RTT) {
     return 4;
   } else {
-    double bdp = double(1.5) * rtt * get_bw();
-    // cerr << "At time " << timestamp_ms() << " window size is " << bdp << endl;
+    double bdp = double(1.5) * rtt * get_bw() * gain_cycle[epoch_ % GC];
+    // cerr << gain_cycle[epoch_ % GC] << endl;
+    cerr << "At time " << timestamp_ms() << " window size is " << bdp << endl;
+    cerr << "rtt = " << rtt << ", bw = " << get_bw() << endl;
     return bdp;
   }
   /*
