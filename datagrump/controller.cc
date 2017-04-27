@@ -8,7 +8,7 @@ using namespace std;
 
 /* Default constructor */
 Controller::Controller( const bool debug )
-  : debug_( debug ), packets_sent_(), the_window_size_(10)
+  : debug_( debug ), the_window_size_(15), rtt_threshold_(100)
 { }
 
 /* Get current window size, in datagrams */
@@ -28,7 +28,6 @@ void Controller::datagram_was_sent( const uint64_t sequence_number,
 				    const uint64_t send_timestamp
             /* in milliseconds */)
 {
-  packets_sent_.push(sent_packet_info_(sequence_number, send_timestamp));
   if ( debug_ ) {
     cerr << "At time " << send_timestamp
 	 << " sent datagram " << sequence_number << endl;
@@ -45,16 +44,11 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
 			       const uint64_t timestamp_ack_received )
                                /* when the ack was received (by sender) */
 {
-  bool timeout = true;
-  while (!packets_sent_.empty() &&
-         packets_sent_.front().seqno <= sequence_number_acked) {
-    timeout = false;
-    packets_sent_.pop();
-  }
-
-  if (!timeout) {
+  uint64_t rtt = timestamp_ack_received - send_timestamp_acked;
+  if (rtt <= rtt_threshold_) {
     the_window_size_ += 1.0 / the_window_size_;
-    if ( debug_ ) cerr << "Ack; window size = " << the_window_size_ << endl;
+  } else {
+    the_window_size_ = max(1.0, the_window_size_ - 1);
   }
 
   if ( debug_ ) {
@@ -69,25 +63,6 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
   cerr << "RTT = " << timestamp_ack_received - send_timestamp_acked
        << ", window size = " << the_window_size_ << endl;
        */
-}
-
-void Controller::adjust_window( void )
-{
-  bool timeout = false;
-  uint64_t now = timestamp_ms();
-  while (!packets_sent_.empty() &&
-         packets_sent_.front().sent_time < now - timeout_ms()) {
-    timeout = true;
-    packets_sent_.pop();
-  }
-  /*
-  cerr << "Timeout at time " << timestamp_ms()
-       << " window size is " << the_window_size_ << endl;
-       */
-  if (timeout) {
-    the_window_size_ = max(1.0, the_window_size_ / 2.0);
-    if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
-  }
 }
 
 /* How long to wait (in milliseconds) if there are no acks

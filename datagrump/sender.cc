@@ -147,13 +147,9 @@ int DatagrumpSender::loop( void )
     if ( ret.result == PollResult::Exit ) {
       return ret.exit_status;
     }
-
-    controller_.adjust_window();
-#if 0
     else if ( ret.result == PollResult::Timeout ) {
       /* After a timeout, send one datagram to try to get things moving again */
       send_datagram();
     }
-#endif
   }
 }
