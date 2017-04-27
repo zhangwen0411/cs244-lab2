@@ -7,7 +7,7 @@ using namespace std;
 
 /* Default constructor */
 Controller::Controller( const bool debug )
-  : debug_( debug ), rate_( 1e-2 ), prev_rtt_( 0.0 ), rtt_diff_( 0.0 ),
+  : debug_( debug ), rate_( 1e-1 ), prev_rtt_( 0.0 ), rtt_diff_( 0.0 ),
     counter_( 0 ), neg_gradient_counter_( 0 ), next_send_( 0.0 )
 {}
 
@@ -69,14 +69,17 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
 
   rtt_diff_ = (1 - alpha) * rtt_diff_ + alpha * new_rtt_diff;
   if (new_rtt < t_low) {
-    // cerr << "low\t" << timestamp_ms() << endl;
+    rate_ = max(rate_, 5e-3);
     rate_ += delta;
     return;
   }
+  if (new_rtt > 300) {
+    rate_ = 5e-3;
+    return;
+  }
   if (new_rtt > t_high) {
-    cerr << "high\t" << timestamp_ms() << endl;
     rate_ *= (1 - beta * (1 - t_high / new_rtt));
-    rate_ = max(rate_, 1e-3);
+    rate_ = max(rate_, 5e-3);
     return;
   }
 
@@ -84,13 +87,16 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
   else { neg_gradient_counter_ = 0; }
 
   if (rtt_diff_ <= 0) {
-    int N = (neg_gradient_counter_ >= 5) ? 5 : 1;
+    int N = (neg_gradient_counter_ >= 3) ? 10 : 1;
+    // cerr << "increase\t" << N << endl;
     rate_ += N * delta;
   } else {
+    // cerr << "decrease\t" << rtt_diff_ << endl;
     rate_ *= (1 - beta * min(rtt_diff_ / 40.0, 1.0));
   }
 
-  rate_ = max(rate_, 1e-2);
+  rate_ = min(rate_, 1e-1);
+  // rate_ = max(rate_, 5e-3);
 
   if ( debug_ ) {
     cerr << "At time " << timestamp_ack_received

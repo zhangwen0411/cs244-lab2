@@ -20,11 +20,11 @@ private:
 
   double next_send_;
 
-  const uint64_t t_low = 100;
-  const uint64_t t_high = 300;
+  const uint64_t t_low = 75;
+  const uint64_t t_high = 125;
 
-  const double alpha = 0.5;
-  const double beta = 0.8;
+  const double alpha = 0.7;
+  const double beta = 0.3;
   const double delta = 5e-3;
 
 public:
