@@ -53,7 +53,7 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
   }
 
   if (!timeout) {
-    the_window_size_ += 1.0 / the_window_size_;
+    the_window_size_ += 2.0 / the_window_size_;
     if ( debug_ ) cerr << "Ack; window size = " << the_window_size_ << endl;
   }
 
@@ -85,7 +85,7 @@ void Controller::adjust_window( void )
        << " window size is " << the_window_size_ << endl;
        */
   if (timeout) {
-    the_window_size_ = max(1.0, the_window_size_ / 2.0);
+    the_window_size_ = max(1.0, the_window_size_ / 1.25);
     if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
   }
 }
