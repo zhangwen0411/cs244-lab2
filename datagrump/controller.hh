@@ -18,12 +18,14 @@ private:
   uint64_t counter_;
   uint64_t neg_gradient_counter_;
 
-  const uint64_t t_low = 50;
-  const uint64_t t_high = 200;
+  double next_send_;
 
-  const double alpha = 0.8;
+  const uint64_t t_low = 100;
+  const uint64_t t_high = 300;
+
+  const double alpha = 0.5;
   const double beta = 0.8;
-  const double delta = 1e-2;
+  const double delta = 5e-3;
 
 public:
   /* Public interface for the congestion controller */
@@ -49,6 +51,8 @@ public:
   /* How long to wait (in milliseconds) if there are no acks
      before sending one more datagram */
   unsigned int timeout_ms( void );
+
+  bool should_send( void );
 };
 
 #endif

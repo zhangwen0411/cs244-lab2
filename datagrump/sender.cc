@@ -119,6 +119,7 @@ int DatagrumpSender::loop( void )
   /* read and write from the receiver using an event-driven "poller" */
   Poller poller;
 
+#if 0
   /* first rule: if the window is open, close it by
      sending more datagrams */
   poller.add_action( Action( socket_, Direction::Out, [&] () {
@@ -130,6 +131,7 @@ int DatagrumpSender::loop( void )
       },
       /* We're only interested in this rule when the window is open */
       [&] () { return window_is_open(); } ) );
+#endif
 
   /* second rule: if sender receives an ack,
      process it and inform the controller
@@ -141,13 +143,15 @@ int DatagrumpSender::loop( void )
 	return ResultType::Continue;
       } ) );
 
+  send_datagram();
   /* Run these two rules forever */
   while ( true ) {
     const auto ret = poller.poll( controller_.timeout_ms() );
     if ( ret.result == PollResult::Exit ) {
       return ret.exit_status;
-    } else if ( ret.result == PollResult::Timeout ) {
-      /* After a timeout, send one datagram to try to get things moving again */
+    }
+    
+    if ( controller_.should_send() ) {
       send_datagram();
     }
   }
