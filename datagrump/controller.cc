@@ -57,10 +57,10 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
 
   if (!timeout) {
     if (slow_start) {
-      the_window_size_ += 1;
+      the_window_size_ += 2.5;
     }
     else {
-      the_window_size_ += 1.0 / the_window_size_;
+      the_window_size_ += 2.5 / the_window_size_;
     }
     if (the_window_size_ >= ssthresh) {
       slow_start = false;
@@ -96,9 +96,9 @@ void Controller::adjust_window( void )
        << " window size is " << the_window_size_ << endl;
        */
   if (timeout) {
+    ssthresh = the_window_size_ / 1.5;
     the_window_size_ = 5;
     slow_start = true;
-    ssthresh *= 2.0 / 3;
     if ( debug_ ) cerr << "Timeout; window size = " << the_window_size_ << endl;
   }
 }
