@@ -95,7 +95,7 @@ void Controller::ack_received( const uint64_t sequence_number_acked,
    before sending one more datagram */
 unsigned int Controller::timeout_ms( void )
 {
-  return 1000; /* timeout of one second */
+  return 200;
 }
 
 double Controller::get_bw( void )
@@ -105,7 +105,7 @@ double Controller::get_bw( void )
 
 void Controller::update_bw( const double new_bw, const uint64_t seqno )
 {
-  while (!bw_filter_.empty() && bw_filter_.front().seqno < seqno - 10) {
+  while (!bw_filter_.empty() && bw_filter_.front().seqno < seqno - 3) {
     bw_filter_.pop_front();
   }
 
@@ -124,7 +124,7 @@ void Controller::update_bw( const double new_bw, const uint64_t seqno )
 uint64_t Controller::get_rtt( void )
 {
   tp now = std::chrono::system_clock::now();
-  while (!rtt_filter_.empty() && now - rtt_filter_.front().time > std::chrono::seconds(10)) {
+  while (!rtt_filter_.empty() && now - rtt_filter_.front().time > std::chrono::seconds(3)) {
     rtt_filter_.pop_front();
   }
 
